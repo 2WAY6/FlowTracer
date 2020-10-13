@@ -8,58 +8,23 @@ from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
 import shapefile
 
+from flowtrace.parsing import parse_args
+
 
 def main():
-    path_mesh, path_veloc, dt, n_steps, n_drops, n_neighs, max_dist, write_modulo = parse_args()
+    paths, params = parse_args()
 
-    print("\nGewaehlte Simulatonszeit: {} Stunden.".format(round(dt * n_steps / 60 / 60, 2)))
+    print("\nGewaehlte Simulatonszeit: {} Stunden.".format(round(params['dt'] * params['n_steps'] / 60 / 60, 2)))
 
-    nodes = import_mesh_veloc(path_mesh, path_veloc)
+    nodes = import_mesh_veloc(paths['mesh'], paths['veloc'])
 
-    drops = create_drops(nodes, n_drops)
+    drops = create_drops(nodes, params['n_drops'])
 
     kdtree = create_search_tree(nodes)
 
-    drop_paths = run_simulation(drops, n_drops, dt, n_steps, kdtree, n_neighs, max_dist, nodes)
+    drop_paths = run_simulation(drops, params['n_drops'], params['dt'], params['n_steps'], kdtree, params['n_neighs'], params['max_dist'], nodes)
 
-    write_shape(os.path.join(".", "Flow_Traces.shp"), drop_paths, write_modulo)
-
-
-def parse_args():
-    description="Importiert Nodestrings aus Shapes. "
-    ap = argparse.ArgumentParser(description=description, epilog="$Flow Tracer",
-                                 formatter_class=argparse.RawTextHelpFormatter)
-    ap.add_argument("--mesh", metavar='netz.2dm', type=str, required=True,
-                    help="Name eines 2dm-Netzes")
-    ap.add_argument("--veloc", metavar='veloc_max.dat', type=str, required=True,
-                    help="Name der veloc_max.dat")
-    ap.add_argument("--dt", metavar='2', type=int, required=False, default=2,
-                    help="Groesse des Zeitschritts")
-    ap.add_argument("--h", metavar='2', type=float, required=False, default=2,
-                    help="Simulationsdauer")
-    ap.add_argument("--n", metavar='10000', type=int, required=False, default=10000,
-                    help="Anzahl der Regentropfen")
-    ap.add_argument("--neighs", metavar='3', type=int, required=False, default=3,
-                    help="Anzahl der zu zur Interpolation verwendeten Nachbarn im Geschwindigkeitsfeld")
-    ap.add_argument("--radius", metavar='20', type=int, required=False, default=20,
-                    help="Suchradius zur Nachbarn-Suche in Metern")
-    ap.add_argument("--mod", metavar='5', type=int, required=False, default=5,
-                    help="Schreibe nur jede x-te Stützstelle in die Polylinien")
-
-    args = vars(ap.parse_args())
-
-    dir_path = '.'
-    path_mesh = os.path.join(dir_path, args['mesh'])
-    path_veloc = os.path.join(dir_path, args['veloc'])
-    dt = args['dt']
-    n_steps = int(args['h']/dt)+1
-    n_drops = args['n']
-
-    n_neighs = args['neighs']
-    max_dist = args['radius']
-    write_modulo = args['mod']
-
-    return path_mesh, path_veloc, dt, n_steps, n_drops, n_neighs, max_dist, write_modulo
+    write_shape(os.path.join(".", "Flow_Traces.shp"), drop_paths, params['write_modulo'])
 
 
 def import_mesh_veloc(path_mesh, path_veloc):
