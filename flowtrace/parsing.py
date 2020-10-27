@@ -78,7 +78,7 @@ def parse_args():
     write_modulo = args['mod']
 
     path_out_shape = os.path.join(os.path.dirname(path_veloc),
-                                  "Flow_Traces_{}raindrops_{}h_dt{}s.shp".format(n_drops, args['h'], dt))
+                                  "Flow_Traces_n{}_{}h_dt{}s.shp".format(n_drops, args['h'], dt))
     params_dict = {'dt': dt,
                    'n_steps': n_steps,
                    'n_drops': n_drops,

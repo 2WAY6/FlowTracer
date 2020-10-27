@@ -7,6 +7,11 @@ Created:    01.02.2020
 Modified:   13.10.2020
 
 @author: Pascal Wiese
+
+TODO: Put functions in separate python files
+TODO: Improve description 
+TODO: Broadcast the simulation for better performance
+TODO: flake8
 '''
 
 import os
