@@ -32,7 +32,7 @@ def main():
 
     drop_paths = run_simulation(drops, params['n_drops'], params['dt'], params['n_steps'], kdtree, params['n_neighs'], params['max_dist'], nodes)
 
-    write_shape(os.path.join(".", "Flow_Traces.shp"), drop_paths, params['modulo'])
+    write_shape(paths['out_shape'], drop_paths, params['modulo'])
 
     print("\nProgramm abgeschlossen.")
 

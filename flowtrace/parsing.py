@@ -67,7 +67,7 @@ def parse_args():
     dir_path = '.'
 
     path_mesh = os.path.join(dir_path, args['mesh'])
-    path_veloc = os.path.join(dir_path, args['veloc'])
+    path_veloc = os.path.join(dir_path, args['v'])
     dt = args['dt']
     seconds = args['h'] * 60 * 60
     n_steps = int(seconds/dt) + 1
@@ -78,7 +78,7 @@ def parse_args():
     write_modulo = args['mod']
 
     path_out_shape = os.path.join(os.path.dirname(path_veloc),
-                                  "Flow_Traces.shp")
+                                  "Flow_Traces_{}raindrops_{}h_dt{}s.shp".format(n_drops, args['h'], dt))
     params_dict = {'dt': dt,
                    'n_steps': n_steps,
                    'n_drops': n_drops,
@@ -86,8 +86,8 @@ def parse_args():
                    'max_dist': max_dist,
                    'modulo': write_modulo}
 
-    paths_dict = {'mesh': path_mesh, 
-                  'v': path_veloc,
+    paths_dict = {'mesh': path_mesh,
+                  'veloc': path_veloc,
                   'out_shape': path_out_shape}
 
     print("Gewaehlte und ermittelte Parameter: ")
