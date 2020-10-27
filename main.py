@@ -1,8 +1,18 @@
+
+#!/usr/bin/env python3.8
+# -*- encoding: utf-8 -*-
+
+'''
+Created:    01.02.2020
+Modified:   13.10.2020
+
+@author: Pascal Wiese
+'''
+
 import os
 
 from math import sqrt
 from tqdm import tqdm
-import argparse
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
@@ -14,8 +24,6 @@ from flowtrace.parsing import parse_args
 def main():
     paths, params = parse_args()
 
-    print("\nGewaehlte Simulatonszeit: {} Stunden.".format(round(params['dt'] * params['n_steps'] / 60 / 60, 2)))
-
     nodes = import_mesh_veloc(paths['mesh'], paths['veloc'])
 
     drops = create_drops(nodes, params['n_drops'])
@@ -24,7 +32,7 @@ def main():
 
     drop_paths = run_simulation(drops, params['n_drops'], params['dt'], params['n_steps'], kdtree, params['n_neighs'], params['max_dist'], nodes)
 
-    write_shape(os.path.join(".", "Flow_Traces.shp"), drop_paths, params['write_modulo'])
+    write_shape(os.path.join(".", "Flow_Traces.shp"), drop_paths, params['modulo'])
 
 
 def import_mesh_veloc(path_mesh, path_veloc):
@@ -47,6 +55,7 @@ def import_mesh_veloc(path_mesh, path_veloc):
             pass
 
     nodes = np.array(nodes)
+    print(nodes.shape)
     return nodes
 
 
@@ -73,6 +82,43 @@ def dist_2d(A, B):
     return sqrt(dx**2 + dy**2)
 
 
+def run_simulation_broadcasting(drops, n_drops, dt, n_steps, kdtree, n_neighs, max_dist, nodes):
+    print("\nBerechne Tropfen-Pfade...")
+    drop_paths = np.zeros((n_steps, len(drops), 2), dtype=np.float)
+    drop_paths[0, :, :] = drops
+
+    drop_velocs = np.zeros((len(drops), 2))
+
+    for step in tqdm(range(1, n_steps)):
+        for di in range(n_drops):
+            # Move drop
+            dists, ids = kdtree.query(drops[di], n_neighs)
+            neigh_ids = [ids[i] for i in range(len(ids)) if dists[i] < max_dist]
+            if len(neigh_ids) < 3:
+                drop_velocs[di, 0] = 0
+                drop_velocs[di, 1] = 0
+                continue
+
+            x0, y0 = drop_paths[step, di]
+            vx_res, vy_res = 0, 0
+            weight_sum = 0
+            for neigh_id in neigh_ids:
+                x1, y1, vx, vy = nodes[neigh_id]
+                weight = 1/dist_2d((x0, y0), (x1, y1))
+                vx_res += weight * vx
+                vy_res += weight * vy
+                weight_sum += weight
+
+            vx_res = vx_res/weight_sum
+            vy_res = vy_res/weight_sum
+            drop_velocs[di, 0] = vx_res
+            drop_velocs[di, 1] = vy_res
+
+        drop_paths[step] = drop_paths[step-1] + drop_velocs
+
+    return drop_paths
+
+
 def run_simulation(drops, n_drops, dt, n_steps, kdtree, n_neighs, max_dist, nodes):
     print("\nBerechne Tropfen-Pfade...")
     drop_paths = [[] for n in range(n_drops)]
@@ -88,7 +134,6 @@ def run_simulation(drops, n_drops, dt, n_steps, kdtree, n_neighs, max_dist, node
             neigh_ids = [ids[i] for i in range(len(ids)) if dists[i] < max_dist]
             if len(neigh_ids) < 3:
                 break
-
 
             vx_res, vy_res = 0, 0
             weight_sum = 0
@@ -110,8 +155,9 @@ def run_simulation(drops, n_drops, dt, n_steps, kdtree, n_neighs, max_dist, node
     return drop_paths
 
 
-def write_shape(path_traces, drop_paths, write_modulo):
+def write_shape(path_traces, drop_paths, modulo):
     print("\nSchreibe Tropfen-Pfade als Shape...")
+    print(path_traces)
     w = shapefile.Writer(path_traces)
 
     w.field("ID", "N")
@@ -119,7 +165,17 @@ def write_shape(path_traces, drop_paths, write_modulo):
         if len(drop_path) == 1:
             continue
 
+        points = [xy for m, xy in enumerate(drop_path) if m % modulo == 0]
+        points.append(drop_path[-1])
+
+        if len(points) < 2:
+            continue
+
         w.record(i)
-        w.linez([xy for m, xy in enumerate(drop_path) if m%write_modulo == 0])
+        w.linez([points])
 
     w.close()
+
+
+if __name__ == '__main__':
+    main()
