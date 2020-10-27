@@ -34,6 +34,8 @@ def main():
 
     write_shape(os.path.join(".", "Flow_Traces.shp"), drop_paths, params['modulo'])
 
+    print("\nProgramm abgeschlossen.")
+
 
 def import_mesh_veloc(path_mesh, path_veloc):
     print("\nLese Mesh...")
@@ -161,7 +163,7 @@ def write_shape(path_traces, drop_paths, modulo):
     w = shapefile.Writer(path_traces)
 
     w.field("ID", "N")
-    for i, drop_path in enumerate(drop_paths):
+    for i, drop_path in enumerate(tqdm(drop_paths)):
         if len(drop_path) == 1:
             continue
 
