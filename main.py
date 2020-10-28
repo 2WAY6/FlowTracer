@@ -5,7 +5,7 @@
 '''
 
 FLOW TRACER
-Version 1.0
+Version 2.0
 
 Created:    01.02.2020
 Modified:   13.10.2020
@@ -19,6 +19,7 @@ TODO: flake8
 '''
 
 import os
+import sys
 
 from math import sqrt
 from tqdm import tqdm
@@ -28,11 +29,30 @@ import matplotlib.pyplot as plt
 import shapefile
 
 from flowtrace.parsing import parse_args
+from flowtrace.mesh import Mesh
+from flowtrace.simulation import run_simulation_rasterized
 
 
 def main():
     paths, params = parse_args()
 
+    mesh = Mesh()
+    mesh.import_2dm_mesh(paths['mesh'])
+    mesh.import_2dm_vector_dat(paths['veloc'])
+    mesh.create_rasterized_vector_field()
+    print(mesh.nodes.min(axis=0))
+
+    drops = create_drops(mesh.nodes, params['n_drops'])
+
+    drop_paths = run_simulation_rasterized(mesh, drops, params['dt'], 
+                                           params['n_steps'])
+
+    write_shape(paths['out_shape'], drop_paths, params['modulo'])
+
+    print("\nProgramm abgeschlossen.")
+
+    sys.exit()
+    # before:
     nodes = import_mesh_veloc(paths['mesh'], paths['veloc'])
 
     drops = create_drops(nodes, params['n_drops'])
@@ -66,15 +86,19 @@ def import_mesh_veloc(path_mesh, path_veloc):
             pass
 
     nodes = np.array(nodes)
-    print(nodes.shape)
     return nodes
 
 
 def create_drops(nodes, n_drops):
     print("\nErzeuge die Startpositionen der Tropfen...")
 
-    x_min, y_min, vx_min, vy_min = nodes.min(axis=0)
-    x_max, y_max, vx_max, vy_max = nodes.max(axis=0)
+    x_min, y_min = nodes[:, :2].min(axis=0)
+    x_max, y_max = nodes[:, :2].max(axis=0)
+    print("- Random positions between ({}, {}) und ({}, {})".format(x_min,
+                                                                    y_min,
+                                                                    x_max,
+                                                                    y_max))
+
     drops = np.random.rand(n_drops, 2)
     drops[:, 0] = x_min + drops[:, 0] * (x_max - x_min)
     drops[:, 1] = y_min + drops[:, 1] * (y_max - y_min)
@@ -91,43 +115,6 @@ def dist_2d(A, B):
     dx = B[0] - A[0]
     dy = B[1] - A[1]
     return sqrt(dx**2 + dy**2)
-
-
-def run_simulation_broadcasting(drops, n_drops, dt, n_steps, kdtree, n_neighs, max_dist, nodes):
-    print("\nBerechne Tropfen-Pfade...")
-    drop_paths = np.zeros((n_steps, len(drops), 2), dtype=np.float)
-    drop_paths[0, :, :] = drops
-
-    drop_velocs = np.zeros((len(drops), 2))
-
-    for step in tqdm(range(1, n_steps)):
-        for di in range(n_drops):
-            # Move drop
-            dists, ids = kdtree.query(drops[di], n_neighs)
-            neigh_ids = [ids[i] for i in range(len(ids)) if dists[i] < max_dist]
-            if len(neigh_ids) < 3:
-                drop_velocs[di, 0] = 0
-                drop_velocs[di, 1] = 0
-                continue
-
-            x0, y0 = drop_paths[step, di]
-            vx_res, vy_res = 0, 0
-            weight_sum = 0
-            for neigh_id in neigh_ids:
-                x1, y1, vx, vy = nodes[neigh_id]
-                weight = 1/dist_2d((x0, y0), (x1, y1))
-                vx_res += weight * vx
-                vy_res += weight * vy
-                weight_sum += weight
-
-            vx_res = vx_res/weight_sum
-            vy_res = vy_res/weight_sum
-            drop_velocs[di, 0] = vx_res
-            drop_velocs[di, 1] = vy_res
-
-        drop_paths[step] = drop_paths[step-1] + drop_velocs
-
-    return drop_paths
 
 
 def run_simulation(drops, n_drops, dt, n_steps, kdtree, n_neighs, max_dist, nodes):
