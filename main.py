@@ -5,7 +5,7 @@
 '''
 
 FLOW TRACER
-Version 2.0
+Version 2.0 beta
 
 Created:    01.02.2020
 Modified:   13.10.2020
@@ -14,8 +14,10 @@ Modified:   13.10.2020
 
 TODO: Put functions in separate python files
 TODO: Improve description 
-TODO: Broadcast the simulation for better performance
+TODO: Rewrite numba functions with cython
 TODO: flake8
+TODO: Use either german or english in the print comments
+
 '''
 
 import os
@@ -34,6 +36,7 @@ from flowtrace.simulation import run_simulation_rasterized
 
 
 def main():
+    print_title()
     paths, params = parse_args()
 
     mesh = Mesh()
@@ -67,6 +70,20 @@ def main():
     write_shape(paths['out_shape'], drop_paths, params['modulo'])
 
     print("\nProgramm abgeschlossen.")
+
+
+def print_title():
+    print("\n")
+    print(r"______ _             _____ ")                      
+    print(r"|  ___| |           |_   _| ")                     
+    print(r"| |_  | | _____      _| |_ __ __ _  ___ ___ _ __ ")
+    print(r"|  _| | |/ _ \ \ /\ / / | '__/ _` |/ __/ _ \ '__|")
+    print(r"| |   | | (_) \ V  V /| | | | (_| | (_|  __/ |   ")
+    print(r"\_|   |_|\___/ \_/\_/ \_/_|  \__,_|\___\___|_| ")
+    print(r"~ ~ ~ ~ ~ ~ ~ ~ Version 2.0 beta ~ ~ ~ ~ ~ ~ ~ ~")
+    print("\nCreating Flow Traces from 2d simulation results.")
+    print("(c) Pascal Wiese, 2020\n")
+    print("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~")
 
 
 def import_mesh_veloc(path_mesh, path_veloc):
