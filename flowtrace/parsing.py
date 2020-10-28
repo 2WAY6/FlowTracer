@@ -18,7 +18,7 @@ def parse_args():
                     type=str,
                     required=True,
                     help="Name des 2dm-Netzes")
-    ap.add_argument("--v",
+    ap.add_argument("--dat",
                     metavar='veloc_max.dat',
                     type=str,
                     required=True,
@@ -67,7 +67,7 @@ def parse_args():
     dir_path = '.'
 
     path_mesh = os.path.join(dir_path, args['mesh'])
-    path_veloc = os.path.join(dir_path, args['v'])
+    path_dat = os.path.join(dir_path, args['dat'])
     dt = args['dt']
     seconds = args['h'] * 60 * 60
     n_steps = int(seconds/dt) + 1
@@ -77,7 +77,7 @@ def parse_args():
     max_dist = args['radius']
     write_modulo = args['mod']
 
-    path_out_shape = os.path.join(os.path.dirname(path_veloc),
+    path_out_shape = os.path.join(os.path.dirname(path_dat),
                                   "Flow_Traces_n{}_{}h_dt{}s.shp".format(n_drops, args['h'], dt))
     params_dict = {'dt': dt,
                    'n_steps': n_steps,
@@ -87,7 +87,7 @@ def parse_args():
                    'modulo': write_modulo}
 
     paths_dict = {'mesh': path_mesh,
-                  'veloc': path_veloc,
+                  'dat': path_dat,
                   'out_shape': path_out_shape}
 
     print("Gewaehlte und ermittelte Parameter: ")

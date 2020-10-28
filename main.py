@@ -38,16 +38,19 @@ def main():
 
     mesh = Mesh()
     mesh.import_2dm_mesh(paths['mesh'])
-    mesh.import_2dm_vector_dat(paths['veloc'])
+    mesh.import_2dm_vector_dat(paths['dat'])
     mesh.create_rasterized_vector_field()
-    print(mesh.nodes.min(axis=0))
+
+    # write_field_shape(paths['mesh'][:-4] + "_field.shp", mesh)
+
+    # print(mesh.nodes.min(axis=0))
 
     drops = create_drops(mesh.nodes, params['n_drops'])
 
     drop_paths = run_simulation_rasterized(mesh, drops, params['dt'], 
                                            params['n_steps'])
 
-    write_shape(paths['out_shape'], drop_paths, params['modulo'])
+    write_shape_transpose(paths['out_shape'], drop_paths, params['modulo'])
 
     print("\nProgramm abgeschlossen.")
 
@@ -172,6 +175,39 @@ def write_shape(path_traces, drop_paths, modulo):
         w.record(i)
         w.linez([points])
 
+    w.close()
+
+
+def write_shape_transpose(path_traces, drop_paths, modulo):
+    print("\nSchreibe Tropfen-Pfade als Shape...")
+    print(path_traces)
+    w = shapefile.Writer(path_traces)
+
+    w.field("ID", "N")
+    for col in tqdm(range(drop_paths.shape[1])):
+        points = drop_paths[:, col]
+
+        w.record(col)
+        w.linez([points])
+
+    w.close()
+
+
+def write_field_shape(path_shp, mesh):
+    print("\nWriting vector field to point shape...")
+    w = shapefile.Writer(path_shp)
+
+    w.field("Vx", "F", decimal=3)
+    w.field("Vy", "F", decimal=3)
+
+    for row in tqdm(range(mesh.vector_field.shape[0])):
+        for col in range(mesh.vector_field.shape[1]):
+            x = col + mesh.x_min
+            y = mesh.y_max - row
+
+            w.record(mesh.vector_field[row, col, 0],
+                     mesh.vector_field[row, col, 1])
+            w.point(x, y)
     w.close()
 
 

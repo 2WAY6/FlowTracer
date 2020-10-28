@@ -1,4 +1,5 @@
 import os
+from time import time
 
 import numpy as np
 from numba import jit
@@ -80,10 +81,15 @@ class Mesh:
         print("\nCreating a rasterized vector field from mesh...")
         print("- Resolution: {} m.".format(resolution))
 
-        self.vector_field = np.zeros((int(self.x_max - self.x_min),
-                                      int(self.y_max - self.y_min),
+        t0 = time()
+        self.vector_field = np.zeros((int(self.y_max - self.y_min) + 1,
+                                      int(self.x_max - self.x_min) + 1,
                                       2))
+        r, c, _ = self.vector_field.shape
+        print("- Creating raster with {} rows and {} columns.".format(r, c))
+        print("- Interpolating values for {} cells.".format(r*c))
 
         # TODO: Use Cython for this part
         rasterize(self.nodes, self.values, self.elements, self.x_min,
-                  self.y_max, self.vector_field)
+                  self.x_max, self.y_min, self.y_max, self.vector_field)
+        print("Finished after {:.3} seconds.".format(time() - t0))

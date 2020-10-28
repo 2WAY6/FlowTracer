@@ -30,8 +30,11 @@ def interpolate_z_on_triangle(p, nodes, values):
 
 # TODO: Use Cython
 @jit
-def rasterize(nodes, vals,  elements, glob_xmin, glob_ymax, raster):
+def rasterize(nodes, vals,  elements, glob_xmin, glob_xmax, glob_ymin,
+              glob_ymax, raster):
     glob_xmin_int = int(glob_xmin)
+    glob_xmax_int = int(glob_xmax)
+    glob_ymin_int = int(glob_ymin)
     glob_ymax_int = int(glob_ymax)
 
     for ti in range(elements.shape[0]):
@@ -56,7 +59,8 @@ def rasterize(nodes, vals,  elements, glob_xmin, glob_ymax, raster):
                 if (bool1 and bool2 and bool3) or \
                    (not bool1 and not bool2 and not bool3):
                     rcol = i - glob_xmin_int  # - 1
-                    rrow = glob_ymax_int - j
+                    rrow = j - glob_ymin_int
+                    # rrow = glob_ymax_int - j
 
                     raster[rrow, rcol, 0] = interpolate_z_on_triangle(
                         pnt, triangle, values[:, 0])
