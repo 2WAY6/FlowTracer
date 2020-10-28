@@ -3,6 +3,10 @@
 # -*- encoding: utf-8 -*-
 
 '''
+
+FLOW TRACER
+Version 1.0
+
 Created:    01.02.2020
 Modified:   13.10.2020
 
