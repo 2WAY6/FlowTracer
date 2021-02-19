@@ -2,14 +2,12 @@ import os
 from time import time
 
 import numpy as np
-from numba import jit
 
-from .geometry import is_ccw, interpolate_z_on_triangle, rasterize
+from geometry.rasterization import rasterize
 
 
 class Mesh:
     def __init__(self):
-        print("\nInitializing Mesh Object...")
         self.nodes = []
         self.values = None
         self.elements = []
@@ -47,17 +45,17 @@ class Mesh:
         print("- Calculating bounding box...")
         self.x_min, self.y_min = np.min(self.nodes[:, :2], axis=0)
         self.x_max, self.y_max = np.max(self.nodes[:, :2], axis=0)
-        print("  - BBox: ({}, {}) ({}, {})".format(self.x_min,
-                                                   self.y_min,
-                                                   self.x_max,
-                                                   self.y_max))
+        print("  -> Bounding box: ({}, {}) ({}, {})".format(self.x_min,
+                                                            self.y_min,
+                                                            self.x_max,
+                                                            self.y_max))
 
         print("- Imported {} nodes and {} elements.".format(
               self.nodes.shape[0], self.elements.shape[0]))
 
     # Function for importing 2dm vector dats (= pair of values)
     def import_2dm_vector_dat(self, path_dat):
-        print("\nImporting vector dat from {}...".format(
+        print("\nImporting vector data from {}...".format(
               os.path.basename(path_dat)))
         with open(path_dat) as f:
             lines = f.readlines()
@@ -68,8 +66,8 @@ class Mesh:
                   in lines[4:(4+n_nodes)]]
 
         self.values = np.array(values)
-        print("Min Values: ", self.values.min(axis=0))
-        print("Max Values: ", self.values.max(axis=0))
+        print("-> Min Values: ", self.values.min(axis=0))
+        print("-> Max Values: ", self.values.max(axis=0))
 
     # TODO: Import UnRunOff mesh
     def import_uro_mesh(self, path_mesh):
@@ -89,14 +87,14 @@ class Mesh:
                                  int(self.x_max - self.x_min) + 1,
                                  2))
         r, c, _ = vector_field.shape
-        print("- Creating raster with {} rows and {} columns.".format(r, c))
-        print("- Interpolating values for {} cells.".format(r*c))
+        print("- Creating raster with {} rows and {} columns...".format(r, c))
+        print("- Interpolating values for {} cells...".format(r*c))
 
         # TODO: Use Cython for this part
         rasterize(self.nodes, self.values, self.elements, self.x_min,
                   self.x_max, self.y_min, self.y_max, vector_field)
         self.vector_field = vector_field
-        print(vector_field.min())
-        print(vector_field.max())
+        # print(vector_field.min())
+        # print(vector_field.max())
 
         print("Finished after {:.3} seconds.".format(time() - t0))

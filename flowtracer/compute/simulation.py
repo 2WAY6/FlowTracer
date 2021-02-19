@@ -3,12 +3,10 @@ from time import time
 import numpy as np
 
 
-# TODO: Use Cython instead
 def run_simulation_rasterized(mesh, drops, dt, n_steps):
-    print("\nSimuliere die Partikel im Vektorfeld...")
+    print("\nSimulating particle movement within the vector field...")
     t0 = time()
 
-    # TODO: That can be done before when the old code is deleted
     drops[:, 0] -= mesh.x_min
     drops[:, 1] -= mesh.y_min
 
@@ -16,18 +14,7 @@ def run_simulation_rasterized(mesh, drops, dt, n_steps):
     field = mesh.vector_field
     vectors = np.zeros((drops.shape[0], 2))
 
-    # print(drops)
-    # print(f"drops.min(axis=0)\t{drops.min(axis=0)}")
-    # print(f"drops.max(axis=0)\t{drops.max(axis=0)}")
-    # print(f"drops.shape\t{drops.shape}")
-    # print(f"vectors.shape\t{vectors.shape}")
-    # print(f"field.shape\t{field.shape}")
-
     for tsi in range(n_steps):
-        # print("- Entering timestep {} / {} -> {} s...".format(tsi + 1,
-        #                                                       n_steps,
-        #                                                       tsi * dt))
-        # Save momentary drop positions
         drop_paths.append(np.copy(drops))
 
         # Find drop position buckets
@@ -43,11 +30,25 @@ def run_simulation_rasterized(mesh, drops, dt, n_steps):
         # Update positions
         drops += dt * vectors
 
-    print(drop_paths[0])
-
     drop_paths = np.array(drop_paths)
     drop_paths[:, :, 0] += mesh.x_min
     drop_paths[:, :, 1] += mesh.y_min
 
     print("Finished after {:.3} seconds.".format(time() - t0))
     return drop_paths
+
+
+def create_drops(nodes, n_drops):
+    print(f"\nCreating initial position for {n_drops} particles...")
+
+    x_min, y_min = nodes[:, :2].min(axis=0)
+    x_max, y_max = nodes[:, :2].max(axis=0)
+    print("- Random positions between ({}, {}) und ({}, {})".format(x_min,
+                                                                    y_min,
+                                                                    x_max,
+                                                                    y_max))
+
+    drops = np.random.rand(n_drops, 2)
+    drops[:, 0] = x_min + drops[:, 0] * (x_max - x_min)
+    drops[:, 1] = y_min + drops[:, 1] * (y_max - y_min)
+    return drops

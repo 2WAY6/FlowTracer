@@ -1,11 +1,20 @@
 import numpy as np
 from numba import jit
+from math import sqrt
+
+
+def dist_2d(A, B):
+    dx = B[0] - A[0]
+    dy = B[1] - A[1]
+    return sqrt(dx**2 + dy**2)
 
 
 # TODO: Use Cython
 @jit
 def is_ccw(vec_a, vec_b, vec_c):
-    return (vec_c[1] - vec_a[1]) * (vec_b[0] - vec_a[0]) >= (vec_b[1] - vec_a[1]) * (vec_c[0] - vec_a[0]) # >= because of zero area case
+    # >= because of zero area case
+    return (vec_c[1] - vec_a[1]) * (vec_b[0] - vec_a[0]) >= \
+           (vec_b[1] - vec_a[1]) * (vec_c[0] - vec_a[0])
 
 
 # TODO: Use Cython
@@ -33,9 +42,9 @@ def interpolate_z_on_triangle(p, nodes, values):
 def rasterize(nodes, vals,  elements, glob_xmin, glob_xmax, glob_ymin,
               glob_ymax, raster):
     glob_xmin_int = int(glob_xmin)
-    glob_xmax_int = int(glob_xmax)
+    # glob_xmax_int = int(glob_xmax)
     glob_ymin_int = int(glob_ymin)
-    glob_ymax_int = int(glob_ymax)
+    # glob_ymax_int = int(glob_ymax)
 
     for ti in range(elements.shape[0]):
         nids = elements[ti]
