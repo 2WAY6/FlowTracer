@@ -66,7 +66,10 @@ class Mesh:
         n_nodes = self.nodes.shape[0]
         values = [list(map(float, line.split())) for line
                   in lines[4:(4+n_nodes)]]
+
         self.values = np.array(values)
+        print("Min Values: ", self.values.min(axis=0))
+        print("Max Values: ", self.values.max(axis=0))
 
     # TODO: Import UnRunOff mesh
     def import_uro_mesh(self, path_mesh):
@@ -82,14 +85,18 @@ class Mesh:
         print("- Resolution: {} m.".format(resolution))
 
         t0 = time()
-        self.vector_field = np.zeros((int(self.y_max - self.y_min) + 1,
-                                      int(self.x_max - self.x_min) + 1,
-                                      2))
-        r, c, _ = self.vector_field.shape
+        vector_field = np.zeros((int(self.y_max - self.y_min) + 1,
+                                 int(self.x_max - self.x_min) + 1,
+                                 2))
+        r, c, _ = vector_field.shape
         print("- Creating raster with {} rows and {} columns.".format(r, c))
         print("- Interpolating values for {} cells.".format(r*c))
 
         # TODO: Use Cython for this part
         rasterize(self.nodes, self.values, self.elements, self.x_min,
-                  self.x_max, self.y_min, self.y_max, self.vector_field)
+                  self.x_max, self.y_min, self.y_max, vector_field)
+        self.vector_field = vector_field
+        print(vector_field.min())
+        print(vector_field.max())
+
         print("Finished after {:.3} seconds.".format(time() - t0))

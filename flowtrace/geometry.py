@@ -24,7 +24,7 @@ def interpolate_z_on_triangle(p, nodes, values):
            (v3[0] - v2[0]) * (v1[1] - v3[1])))
     w3 = 1 - w1 - w2
 
-    z = w1 * values[0] + w2 * values[1] + w3 * values[3]
+    z = w1 * values[0] + w2 * values[1] + w3 * values[2]
     return z
 
 
@@ -66,3 +66,5 @@ def rasterize(nodes, vals,  elements, glob_xmin, glob_xmax, glob_ymin,
                         pnt, triangle, values[:, 0])
                     raster[rrow, rcol, 1] = interpolate_z_on_triangle(
                         pnt, triangle, values[:, 1])
+
+                    # print(raster[rrow, rcol])

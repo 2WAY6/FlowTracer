@@ -43,6 +43,8 @@ def run_simulation_rasterized(mesh, drops, dt, n_steps):
         # Update positions
         drops += dt * vectors
 
+    print(drop_paths[0])
+
     drop_paths = np.array(drop_paths)
     drop_paths[:, :, 0] += mesh.x_min
     drop_paths[:, :, 1] += mesh.y_min
